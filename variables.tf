@@ -8,7 +8,12 @@ variable "ami_id" {
   default = "ami-0c101f26f147fa7fd"
 }
 
-variable "instance_type" {
+variable "jenkins_instance_type" {
+  type    = string
+  default = "t2.small"
+}
+
+variable "ansible_instance_type" {
   type    = string
   default = "t2.micro"
 }
@@ -20,7 +25,7 @@ variable "key_name" {
 
 variable "bucket_name" {
   type    = string
-  default = "jenkins-s3-artificats-0626739"
+  default = "devops-s3-artificats-0626739"
 }
 
 variable "acl" {

@@ -1,6 +1,6 @@
-resource "aws_security_group" "jenkins_sg" {
-  name        = "jenkins-sg"
-  description = "Security group for bastion server"
+resource "aws_security_group" "devops_intance_sg" {
+  name        = "devops-instance-sg"
+  description = "Security group for DevOps server"
 
   ingress {
     from_port   = 22
@@ -24,13 +24,6 @@ resource "aws_security_group" "jenkins_sg" {
   }
 
   ingress {
-    from_port   = 8082
-    to_port     = 8082
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
@@ -45,48 +38,50 @@ resource "aws_security_group" "jenkins_sg" {
   }
 }
 
-data "template_file" "install_script" {
-  template = file("${path.module}/install.sh")
+data "template_file" "jenkins_install_script" {
+  template = file("${path.module}/jenkins.sh")
 }
 
 resource "aws_instance" "jenkins_instance" {
   ami           = var.ami_id
-  instance_type = var.instance_type
+  instance_type = var.jenkins_instance_type
   key_name      = var.key_name
 
-  vpc_security_group_ids      = [aws_security_group.jenkins_sg.id]
+  vpc_security_group_ids      = [aws_security_group.devops_intance_sg.id]
   associate_public_ip_address = true
 
-  user_data = data.template_file.install_script.rendered
+  user_data = data.template_file.jenkins_install_script.rendered
 
   tags = {
-    Name = "devops-instance"
+    Name = "Jenkins Server"
   }
 }
 
-resource "aws_s3_bucket" "jenkins_s3_bucket_artifacts" {
-  bucket = var.bucket_name
+data "template_file" "ansible_install_script" {
+  template = file("${path.module}/ansible.sh")
+}
+
+resource "aws_instance" "ansible_instance" {
+  ami           = var.ami_id
+  instance_type = var.ansible_instance_type
+  key_name      = var.key_name
+
+  vpc_security_group_ids      = [aws_security_group.devops_intance_sg.id]
+  associate_public_ip_address = true
+  iam_instance_profile        = aws_iam_instance_profile.ec2_devops_profile.name
+
+  user_data = data.template_file.ansible_install_script.rendered
 
   tags = {
-    Name = "jenkins-s3-bucket"
+    Name = "Ansible Server"
   }
 }
 
-resource "aws_s3_bucket_ownership_controls" "jenkins_s3_bucket_artifacts_acl_ownership" {
-  bucket = aws_s3_bucket.jenkins_s3_bucket_artifacts.id
-  rule {
-    object_ownership = "ObjectWriter"
-  }
-}
 
-resource "aws_s3_bucket_acl" "jenkins_s3_bucket_artifacts_acl" {
-  bucket     = aws_s3_bucket.jenkins_s3_bucket_artifacts.id
-  acl        = var.acl
-  depends_on = [aws_s3_bucket_ownership_controls.jenkins_s3_bucket_artifacts_acl_ownership]
-}
+# Create IAM role for Ansible Server to access EKS Cluster
 
-resource "aws_iam_role" "s3_jenkins_role" {
-  name = "s3-jenkins-role"
+resource "aws_iam_role" "ec2_devops_role" {
+  name = "ec2-devops-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -101,14 +96,14 @@ resource "aws_iam_role" "s3_jenkins_role" {
   })
 }
 
-resource "aws_iam_policy" "s3_jenkins_policy" {
-  name   = "s3-jenkins-rw-policy"
+resource "aws_iam_policy" "ec2_devops_policy" {
+  name   = "ec2-devops-policy"
   policy = <<EOF
   {
     "Version": "2012-10-17",
     "Statement": [
       {
-        "Sid": "S3ReadWriteAccess",
+        "Sid": "EKSAccess",
         "Effect": "Allow",
         "Action": [
           "s3:GetObject",
@@ -116,8 +111,8 @@ resource "aws_iam_policy" "s3_jenkins_policy" {
           "s3:ListBucket"
         ],
         "Resource": [
-          "arn:aws:s3:::jenkins-s3-artificats-0626739",
-          "arn:aws:s3:::jenkins-s3-artificats-0626739/*"
+          "arn:aws:s3:::devops-s3-artificats-0626739",
+          "arn:aws:s3:::devops-s3-artificats-0626739/*"
         ]
       }
     ]
@@ -125,16 +120,27 @@ resource "aws_iam_policy" "s3_jenkins_policy" {
   EOF
 }
 
-resource "aws_iam_role_policy_attachment" "s3_jenkins_access" {
-  policy_arn = aws_iam_policy.s3_jenkins_policy.arn
-  role       = aws_iam_role.s3_jenkins_role.name
+resource "aws_iam_role_policy_attachment" "ec2_devops_access" {
+  for_each = toset([
+    "arn:aws:iam::aws:policy/AmazonEC2FullAccess",
+    "arn:aws:iam::aws:policy/AWSCloudFormationFullAccess",
+    "arn:aws:iam::aws:policy/IAMFullAccess",
+    "arn:aws:iam::aws:policy/AdministratorAccess"
+  ])
+
+  role       = aws_iam_role.ec2_devops_role.name
+  policy_arn = each.value
 }
 
-resource "aws_iam_instance_profile" "s3_jenkins_profile" {
-  name = "s3-jenkins-profile"
-  role = aws_iam_role.s3_jenkins_role.name
+resource "aws_iam_instance_profile" "ec2_devops_profile" {
+  name = "ec2-devops-profile"
+  role = aws_iam_role.ec2_devops_role.name
 }
 
-output "instance_ip" {
+output "jenkins_server_ip" {
   value = aws_instance.jenkins_instance.public_ip
+}
+
+output "ansible_server_ip" {
+  value = aws_instance.ansible_instance.public_ip
 }
