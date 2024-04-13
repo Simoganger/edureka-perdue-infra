@@ -1,11 +1,21 @@
+variable "profile" {
+  type    = string
+  default = "default"
+}
+
 variable "aws_region" {
   type    = string
-  default = "us-east-1"
+  default = "us-east-2"
 }
 
 variable "ami_id" {
   type    = string
   default = "ami-0c101f26f147fa7fd"
+}
+
+variable "eks_instance_type" {
+  type    = string
+  default = "t2.small"
 }
 
 variable "jenkins_instance_type" {
@@ -23,17 +33,17 @@ variable "key_name" {
   default = "jenkins-kp"
 }
 
-variable "bucket_name" {
+variable "cluster_name" {
   type    = string
-  default = "devops-s3-artificats-0626739"
+  default = "devl"
 }
 
-variable "acl" {
+variable "zone_1" {
   type    = string
-  default = "private"
+  default = "us-east-2a"
 }
 
-variable "profile" {
+variable "zone_2" {
   type    = string
-  default = "default"
+  default = "us-east-2b"
 }
