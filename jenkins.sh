@@ -20,3 +20,10 @@ sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
 sudo yum install jenkins -y
 sudo systemctl enable jenkins
 sudo systemctl start jenkins
+
+# configure swap for the Jenkins server
+sudo dd if=/dev/zero of=swapfile bs=1M count=1K
+sudo mkswap swapfile
+sudo chown root:root swapfile
+sudo chmod 600 swapfile
+sudo swapon swapfile

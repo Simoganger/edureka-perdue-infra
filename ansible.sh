@@ -1,24 +1,24 @@
 #!/bin/bash 
-sudo dnf update -y
+sudo yum update -y
 
 # install git
-sudo dnf install git -y
+sudo yum install git -y
 
 # install java
-sudo dnf install java-11-amazon-corretto -y
+sudo yum install java-11-amazon-corretto -y
 
 # install docker
-sudo dnf search docker -y
-sudo dnf info docker -y
-sudo dnf install docker -y
+sudo yum search docker -y
+sudo yum info docker -y
+sudo yum install docker -y
 
 # enable docker service
 sudo systemctl enable docker.service
 sudo systemctl start docker.service
 
 # install ansible
-sudo dnf install python3 -y
-sudo dnf install python3-pip -y
+sudo yum install python3 -y
+sudo yum install python3-pip -y
 sudo pip install ansible
 
 # install kubectl
@@ -29,10 +29,8 @@ chmod +x ./kubectl
 mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$HOME/bin:$PATH
 echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc
 
-# install eksctl
-curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
-cd /tmp
-sudo mv eksctl /usr/local/bin
+# create ansible user
+useradd ansadmin
 
-# install helm
-curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+# add ansible user to the docker group
+sudo usermod -aG docker ansadmin

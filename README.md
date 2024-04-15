@@ -1,21 +1,35 @@
-### ABC Technologies IaC Project
+## ABC Technologies IaC Project
 
-#### Introduction
+### Introduction
 
-This is the Terraform infrastructure of my Edureka - Perdue Post Graduate Program in DevOps Industry Grade Project. It contains the AWS resources needed to complete the tasks. Though some additional configurations will be donne manually (configuring Jenkins and Ansible Servers or creating the Elastic Kubernetes Service cluster), our objective here is just to automate the initial building block of our project and apply our Terraform knowledge we learned through the program. 
+This is the Terraform infrastructure of my Edureka - Perdue Post Graduate Program in DevOps Industry Grade Project. It contains the AWS resources needed to complete the tasks. Though some additional configurations will be done manually (configuring Jenkins and Ansible Servers, then creating and configuring monitoring ressources), our objective here is just to automate the initial building block of our project and apply our Terraform knowledge we learned through the program. 
 
-#### Project Structure
+### Project structure
 
-This project is a basic Terraform project with a local back-end state management and has the following files:
+This project is a Terraform project with a local back-end state management and has the following files:
 
-- `main.tf`: this is the main file of the infrastructure containing an EC2 instance, a security group for that instance, a S3 bucket for any future artifacts management and role configuration associated to these services.
-- `providers.tf`: this is the initial aws provider configuration.
+- `0-providers.tf`: this is the initial aws provider configuration.
+- `1-vpc.tf`: contains the vpc in which all the resources will be launched.
+- `2-igw.tf`: define the internet gateway for the define vpc.
+- `3-subnets.tf`: define private and public subnets for resources management.
+- `4-nat.tf`: define nat gateway for private subnets out trafic.
+- `5-routes.tf`: define public and private route tables for the infrastructure.
+- `6-eks.tf`: define the eks cluster.
+- `7-nodes.tf`: define a node group for the eks cluster nodes.
+- `8-iam-oidc.tf`: create the OpenID Connect for the eks cluster.
+- `9-prometheus.tf`: create prometheus resources.
+- `10-iam-prometheus.tf`: create IAM roles for prometheus.
+- `11-iam-grafana.tf`: create IAM roles for grafana.
+- `12-ec2-sg.tf`: create security group for EC2 servers (Jenkins and Ansible servers).
+- `13-jenkins.tf`: create and provision the Jenkins server.
+- `14-ansible.tf`: create and provision the Ansible server.
 - `variables.tf`: contains all the variables we are using in the project to apply de DRY (Don't Repeat Yourself) principle.
-- `install.sh`: contains the bash script needed to provision our EC2 instance with the required tools.
+- `ansible.sh`: contains the bash script needed to provision our Ansible server EC2 instance with the required tools.
+- `jenkins.tf`: contains the bash script needed to provision our Jenkins server EC2 instance with the required tools.
 - `terraform.tfstate`: this is the state file for our terraform infrastructure. This can be recreated for anyone who want to use the infrastructure for his own account. So the file might not exist in the project folder right now, but that will be created when `terraform apply` is issued.
 - Other files and folder will appear when terraform commands of the following section are issued. Like the folder `.terraform` and the files `terraform.tfstate, terraform.tfstate.backup, .terraform.lock.hcl`.
 
-#### Running the Project
+### Running the project
 
 To run the project and be able to create the infrastructure described here, one should follow these steps:
 
