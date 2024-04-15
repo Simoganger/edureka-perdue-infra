@@ -4,6 +4,14 @@ resource "aws_security_group" "devops_intance_sg" {
   vpc_id      = aws_vpc.main.id
 
   ingress {
+    description     = "Allow Node Exporter Access"
+    from_port       = 9100
+    to_port         = 9100
+    protocol        = "tcp"
+    security_groups = [aws_eks_cluster.devl.vpc_config[0].cluster_security_group_id]
+  }
+
+  ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"

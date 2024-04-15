@@ -10,12 +10,12 @@ variable "aws_region" {
 
 variable "ami_id" {
   type    = string
-  default = "ami-0c101f26f147fa7fd"
+  default = "ami-0900fe555666598a2"
 }
 
 variable "eks_instance_type" {
   type    = string
-  default = "t2.small"
+  default = "t3.medium"
 }
 
 variable "jenkins_instance_type" {
